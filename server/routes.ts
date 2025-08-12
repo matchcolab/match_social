@@ -1,0 +1,309 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
+import { CommunityWebSocket } from "./services/websocket";
+import { moderateContent, analyzeSentiment, generateIntroductionContext } from "./services/openai";
+import { insertResponseSchema, insertCommentSchema, insertIntroductionSchema } from "@shared/schema";
+
+let websocketService: CommunityWebSocket;
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Auth middleware
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Daily prompt routes
+  app.get('/api/prompts/today', async (req, res) => {
+    try {
+      const prompt = await storage.getTodaysPrompt();
+      res.json(prompt);
+    } catch (error) {
+      console.error("Error fetching today's prompt:", error);
+      res.status(500).json({ message: "Failed to fetch prompt" });
+    }
+  });
+
+  app.get('/api/prompts/:promptId/responses', async (req, res) => {
+    try {
+      const { promptId } = req.params;
+      const userId = req.user?.claims?.sub;
+      const responses = await storage.getResponsesForPrompt(promptId, userId);
+      res.json(responses);
+    } catch (error) {
+      console.error("Error fetching responses:", error);
+      res.status(500).json({ message: "Failed to fetch responses" });
+    }
+  });
+
+  // Response routes
+  app.post('/api/responses', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const responseData = insertResponseSchema.parse({
+        ...req.body,
+        userId,
+      });
+
+      // Moderate content using OpenAI
+      const moderation = await moderateContent(responseData.content);
+      const sentiment = await analyzeSentiment(responseData.content);
+
+      if (!moderation.isApproved) {
+        return res.status(400).json({
+          message: "Content did not pass moderation",
+          flaggedCategories: moderation.flaggedCategories,
+        });
+      }
+
+      const response = await storage.createResponse({
+        ...responseData,
+        isModerated: true,
+        moderationScore: Math.round(moderation.confidence * 100),
+        sentimentScore: sentiment.rating,
+      });
+
+      // Broadcast new response via WebSocket
+      if (websocketService) {
+        const responseWithUser = await storage.getResponsesForPrompt(response.promptId);
+        const newResponse = responseWithUser.find(r => r.id === response.id);
+        if (newResponse) {
+          websocketService.broadcastNewResponse(newResponse);
+        }
+      }
+
+      res.json(response);
+    } catch (error) {
+      console.error("Error creating response:", error);
+      res.status(500).json({ message: "Failed to create response" });
+    }
+  });
+
+  // Comment routes
+  app.get('/api/responses/:responseId/comments', async (req, res) => {
+    try {
+      const { responseId } = req.params;
+      const comments = await storage.getCommentsForResponse(responseId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  app.post('/api/comments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const commentData = insertCommentSchema.parse({
+        ...req.body,
+        userId,
+      });
+
+      // Moderate comment content
+      const moderation = await moderateContent(commentData.content);
+      if (!moderation.isApproved) {
+        return res.status(400).json({
+          message: "Comment did not pass moderation",
+          flaggedCategories: moderation.flaggedCategories,
+        });
+      }
+
+      const comment = await storage.createComment({
+        ...commentData,
+        isModerated: true,
+      });
+
+      // Broadcast new comment via WebSocket
+      if (websocketService) {
+        const commentsWithUser = await storage.getCommentsForResponse(comment.responseId);
+        const newComment = commentsWithUser.find(c => c.id === comment.id);
+        if (newComment) {
+          websocketService.broadcastNewComment(newComment);
+        }
+      }
+
+      res.json(comment);
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  // Like routes
+  app.post('/api/likes', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { responseId, commentId } = req.body;
+
+      const isLiked = await storage.toggleLike(userId, responseId, commentId);
+      
+      // Get updated like count
+      let likeCount = 0;
+      if (responseId) {
+        const response = await storage.getResponseById(responseId);
+        likeCount = response?.likeCount || 0;
+      }
+
+      // Broadcast like update via WebSocket
+      if (websocketService) {
+        websocketService.broadcastLikeUpdate(responseId || commentId, likeCount, isLiked);
+      }
+
+      res.json({ isLiked, likeCount });
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      res.status(500).json({ message: "Failed to toggle like" });
+    }
+  });
+
+  // Group routes
+  app.get('/api/groups', async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const groups = await storage.getAllGroups(userId);
+      res.json(groups);
+    } catch (error) {
+      console.error("Error fetching groups:", error);
+      res.status(500).json({ message: "Failed to fetch groups" });
+    }
+  });
+
+  app.get('/api/user/groups', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groups = await storage.getUserGroups(userId);
+      res.json(groups);
+    } catch (error) {
+      console.error("Error fetching user groups:", error);
+      res.status(500).json({ message: "Failed to fetch user groups" });
+    }
+  });
+
+  app.post('/api/groups/:groupId/join', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { groupId } = req.params;
+      
+      const membership = await storage.joinGroup(userId, groupId);
+      res.json(membership);
+    } catch (error) {
+      console.error("Error joining group:", error);
+      res.status(500).json({ message: "Failed to join group" });
+    }
+  });
+
+  app.delete('/api/groups/:groupId/leave', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { groupId } = req.params;
+      
+      await storage.leaveGroup(userId, groupId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error leaving group:", error);
+      res.status(500).json({ message: "Failed to leave group" });
+    }
+  });
+
+  // Introduction routes
+  app.get('/api/introductions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const introductions = await storage.getUserIntroductions(userId);
+      res.json(introductions);
+    } catch (error) {
+      console.error("Error fetching introductions:", error);
+      res.status(500).json({ message: "Failed to fetch introductions" });
+    }
+  });
+
+  app.post('/api/introductions', isAuthenticated, async (req: any, res) => {
+    try {
+      const requesterId = req.user.claims.sub;
+      const introData = insertIntroductionSchema.parse({
+        ...req.body,
+        requesterId,
+      });
+
+      // Get user profiles for context generation
+      const requester = await storage.getUser(requesterId);
+      const target = await storage.getUser(introData.targetId);
+
+      if (!requester || !target) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Generate enhanced introduction context using AI
+      const enhancedMessage = await generateIntroductionContext(
+        { name: `${requester.firstName} ${requester.lastName}`, bio: requester.bio },
+        { name: `${target.firstName} ${target.lastName}`, bio: target.bio },
+        introData.message || "",
+        "shared community interest"
+      );
+
+      const introduction = await storage.createIntroduction({
+        ...introData,
+        message: enhancedMessage,
+      });
+
+      // Broadcast introduction request via WebSocket
+      if (websocketService) {
+        websocketService.broadcastIntroductionRequest(introData.targetId, {
+          ...introduction,
+          requester,
+        });
+      }
+
+      res.json(introduction);
+    } catch (error) {
+      console.error("Error creating introduction:", error);
+      res.status(500).json({ message: "Failed to create introduction" });
+    }
+  });
+
+  app.patch('/api/introductions/:introId/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const { introId } = req.params;
+      const { status } = req.body;
+
+      if (!['accepted', 'declined'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const introduction = await storage.updateIntroductionStatus(introId, status);
+      res.json(introduction);
+    } catch (error) {
+      console.error("Error updating introduction status:", error);
+      res.status(500).json({ message: "Failed to update introduction status" });
+    }
+  });
+
+  // Community stats
+  app.get('/api/stats', async (req, res) => {
+    try {
+      const stats = await storage.getCommunityStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching community stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  const httpServer = createServer(app);
+
+  // Initialize WebSocket service
+  websocketService = new CommunityWebSocket(httpServer);
+
+  return httpServer;
+}
