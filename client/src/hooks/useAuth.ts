@@ -6,8 +6,7 @@ export function useAuth() {
     retry: false,
   });
 
-  // Debug authentication state
-  console.log('useAuth - data:', user, 'isLoading:', isLoading, 'error:', error);
+
 
   return {
     user,

@@ -338,7 +338,8 @@ export const socialProfileSchema = createInsertSchema(users).pick({
   facebookUrl: true,
   linkedinUrl: true,
 }).extend({
-  socialVerification: z.string().min(1, "At least one social connection is required"),
+  socialVerification: z.string().optional(),
+  dateOfBirth: z.string().optional().transform((str) => str ? new Date(str) : undefined),
 });
 
 export const fullProfileSchema = createInsertSchema(users).pick({

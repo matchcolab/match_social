@@ -30,7 +30,7 @@ export default function ProfileEditor({ user, onSuccess, onCancel }: ProfileEdit
       firstName: user?.firstName || "",
       lastName: user?.lastName || "",
       gender: user?.gender || "",
-      dateOfBirth: user?.dateOfBirth || "",
+      dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : "",
       city: user?.city || "",
       maritalStatus: user?.maritalStatus || "",
       personalIntro: user?.personalIntro || "",
