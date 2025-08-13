@@ -17,7 +17,7 @@ export default function Home() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { onlineCount } = useWebSocket(user?.id);
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated or handle onboarding flow
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -30,7 +30,23 @@ export default function Home() {
       }, 500);
       return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+
+    // Check onboarding status and redirect if incomplete
+    if (user && isAuthenticated) {
+      const status = (user as any).onboardingStatus;
+      
+      if (status === 'account_created') {
+        window.location.href = '/onboarding/social-profile';
+        return;
+      } else if (status === 'social_profile_completed') {
+        window.location.href = '/onboarding/progress';
+        return;
+      } else if (!status || status === 'not_started') {
+        window.location.href = '/onboarding/progress';
+        return;
+      }
+    }
+  }, [isAuthenticated, isLoading, user, toast]);
 
   if (isLoading || !isAuthenticated || !user) {
     return (
