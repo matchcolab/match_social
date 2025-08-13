@@ -15,6 +15,7 @@ import NotFound from "@/pages/not-found";
 import Signup from "@/pages/signup";
 import SocialProfile from "@/pages/onboarding/social-profile";
 import OnboardingProgress from "@/pages/onboarding/progress";
+import OnboardingFlow from "@/pages/onboarding/onboarding-flow";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -22,6 +23,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/signup" component={Signup} />
+      <Route path="/onboarding" component={OnboardingFlow} />
       <Route path="/onboarding/social-profile" component={SocialProfile} />
       <Route path="/onboarding/progress" component={OnboardingProgress} />
       {isLoading || !isAuthenticated ? (

@@ -506,6 +506,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate unique App ID utility function
+  function generateAppId(): string {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  // Step 1: Account creation with App ID assignment
+  app.post('/api/auth/signup', async (req, res) => {
+    try {
+      const signupData = req.body;
+      
+      // Generate unique App ID
+      const appId = generateAppId();
+
+      // Create user with minimal data and App ID
+      const userData = {
+        ...signupData,
+        appId,
+        onboardingStatus: 'account_created',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const newUser = await storage.createUser(userData);
+      
+      res.json({
+        success: true,
+        message: 'Account created successfully',
+        appId: newUser.appId,
+        user: newUser
+      });
+    } catch (error) {
+      console.error("Error creating account:", error);
+      res.status(500).json({ message: "Failed to create account" });
+    }
+  });
+
+  // Step 2: Social profile completion
+  app.post('/api/profile/social-update', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profileData = {
+        ...req.body,
+        onboardingStatus: 'social_profile_complete',
+        updatedAt: new Date(),
+      };
+      
+      const updatedUser = await storage.updateUser(userId, profileData);
+      
+      res.json({
+        success: true,
+        message: 'Social profile updated successfully',
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error updating social profile:", error);
+      res.status(500).json({ message: "Failed to update social profile" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket service

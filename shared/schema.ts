@@ -29,7 +29,14 @@ export const sessions = pgTable(
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin']);
 export const genderEnum = pgEnum('gender', ['male', 'female', 'non_binary', 'prefer_not_to_say']);
 export const maritalStatusEnum = pgEnum('marital_status', ['single_never_married', 'divorced', 'separated_filed', 'separated_not_filed', 'married']);
-export const onboardingStatusEnum = pgEnum('onboarding_status', ['account_created', 'social_profile_completed', 'full_profile_completed', 'verified', 'subscribed']);
+export const onboardingStatusEnum = pgEnum('onboarding_status', [
+  'account_created',           // Step 1: Minimal account setup with email/phone verification
+  'social_profile_complete',   // Step 2: Short social profile (can participate in activities)
+  'full_profile_complete',     // Step 3: Complete profile (eligible for verification)
+  'verified',                  // Step 4: Verification complete (eligible for subscription)
+  'subscribed',               // Step 5: Subscription active (can request introductions)
+  'active_participant'         // Step 6: Actively participating in community
+]);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
