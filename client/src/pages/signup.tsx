@@ -132,7 +132,7 @@ export default function Signup() {
                     <FormItem>
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="John" {...field} />
+                        <Input placeholder="John" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -145,7 +145,7 @@ export default function Signup() {
                     <FormItem>
                       <FormLabel>Last Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Smith" {...field} />
+                        <Input placeholder="Smith" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -160,7 +160,7 @@ export default function Signup() {
                   <FormItem>
                     <FormLabel>Email Address</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="john@example.com" {...field} />
+                      <Input type="email" placeholder="john@example.com" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -200,7 +200,7 @@ export default function Signup() {
                       <FormItem className="flex-1">
                         <FormLabel>Mobile Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="123-456-7890" {...field} />
+                          <Input placeholder="123-456-7890" {...field} value={field.value || ""} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

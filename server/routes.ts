@@ -40,7 +40,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/prompts/:promptId/responses', async (req, res) => {
     try {
       const { promptId } = req.params;
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const responses = await storage.getResponsesForPrompt(promptId, userId);
       res.json(responses);
     } catch (error) {
@@ -130,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: validation.error.issues });
       }
 
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const profileData = validation.data;
 
       await storage.updateUser(userId, {
@@ -152,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: validation.error.issues });
       }
 
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const profileData = validation.data;
 
       await storage.updateUser(userId, {

@@ -22,8 +22,8 @@ export default function SocialProfile() {
   const form = useForm<SocialProfileInput>({
     resolver: zodResolver(socialProfileSchema),
     defaultValues: {
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
+      firstName: (user as any)?.firstName || "",
+      lastName: (user as any)?.lastName || "",
       gender: undefined,
       dateOfBirth: undefined,
       city: "",
