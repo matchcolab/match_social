@@ -1,0 +1,92 @@
+Here is the revised **business requirements prompt** you can pass to Replit, with the *what* and *why* clearly defined, no technical stack or database details, and updated for your rules on IDs, profiles, verification, and subscription gating.
+
+---
+
+## Prompt for Replit: Match Colab – Onboarding & Data Gathering Flow
+
+### Purpose
+
+We want to design an onboarding experience that ensures new users understand our community, feel safe, and are guided toward creating a meaningful profile that allows them to participate in activities, become verified, and, if they wish, purchase a subscription for introductions. This flow must balance ease of entry with enough information to ensure quality and trust within the platform.
+
+---
+
+### **Core Principles**
+
+1. **Safety & Trust** – We onboard only real people who are serious about finding a life partner.
+2. **Progressive Commitment** – Reduce friction at signup, but encourage deeper profile completion before unlocking key features.
+3. **Transparency** – Clearly explain what each step is for and how their information is used.
+4. **Participation Gating** – Users must complete a *short social profile* to join activities, a *comprehensive profile* for verification and subscription eligibility, and hold a paid subscription to request introductions.
+5. **Unique Identification** – No pseudonyms; each account is assigned a unique slug called an **App ID**.
+
+---
+
+### **Onboarding Journey**
+
+#### **Step 1 – Minimal Account Setup**
+
+* User provides essential contact details (email or phone) and verifies via OTP.
+* Consent is collected for Terms of Service, Privacy Policy, and Community Guidelines.
+* The system assigns the user a **unique App ID** for internal and community identification.
+* Purpose: Quickly create a secure account and start tracking the onboarding journey.
+
+---
+
+#### **Step 2 – Short Social Profile (Required for Activities)**
+
+* Key personal details (name, age, gender, location, photo).
+* Brief personal intro and relationship intent.
+* At least one verified social connection (Instagram, Facebook, or LinkedIn).
+* Purpose: Ensure credibility and context so they can participate in group activities, discussions, or events without full verification.
+
+---
+
+#### **Step 3 – Comprehensive Profile (Required for Verification & Subscription)**
+
+* Full background details: education, occupation, lifestyle choices, partner preferences, values, and interests.
+* Additional photos and a more detailed bio.
+* All responses are reviewed for authenticity and quality.
+* Purpose: Establish a complete identity, increase trust, and enable verification.
+
+---
+
+#### **Step 4 – Verification**
+
+* Social verification (preferred) or manual review process.
+* Only verified users are eligible for subscriptions.
+* Purpose: Maintain a safe, authentic member base.
+
+---
+
+#### **Step 5 – Subscription Gating for Introductions**
+
+* Verified users can purchase a subscription.
+* Only subscribed, verified users may request or receive direct introductions.
+* Purpose: Create commitment, prevent casual misuse, and fund the quality-matching process.
+
+---
+
+#### **Step 6 – First Participation**
+
+* After completing the short social profile, the user can:
+
+  * Join group activities or discussions.
+  * Receive daily/weekly prompts for engagement.
+* Once verified and subscribed, they can:
+
+  * Request personalised introductions.
+  * Access premium events or curated matchmaking features.
+* Purpose: Build early engagement while nudging toward verification and subscription.
+
+---
+
+### **Why This Matters**
+
+* **Safety**: Ensures only genuine, committed individuals can interact meaningfully.
+* **Quality**: The short social profile filters out unserious participants before they enter group spaces.
+* **Trust**: The comprehensive profile and verification build credibility and foster respectful interactions.
+* **Revenue & Sustainability**: Subscription gating for introductions ensures a committed pool of participants and supports the operational model.
+* **Scalability**: App IDs and clear participation thresholds make it easy to manage user progression across different stages of the service.
+
+---
+
+If you want, I can now prepare the **exact onboarding field list** in the order they should appear so Replit can implement it step-by-step without guessing. Would you like me to create that list next?

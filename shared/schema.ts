@@ -26,6 +26,8 @@ export const sessions = pgTable(
 );
 
 // User storage table
+export const userRoleEnum = pgEnum('user_role', ['user', 'admin']);
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
@@ -36,6 +38,7 @@ export const users = pgTable("users", {
   location: varchar("location"),
   title: varchar("title"),
   bio: text("bio"),
+  role: userRoleEnum("role").default('user'),
   isVerified: boolean("is_verified").default(false),
   trustScore: integer("trust_score").default(0),
   createdAt: timestamp("created_at").defaultNow(),

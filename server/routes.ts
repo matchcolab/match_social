@@ -300,6 +300,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin middleware to check admin role
+  const isAdmin = async (req: any, res: any, next: any) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      next();
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  // Admin routes
+  app.get('/api/admin/stats', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getAdminStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get('/api/admin/prompts', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const prompts = await storage.getAllPrompts();
+      res.json(prompts);
+    } catch (error) {
+      console.error("Error fetching prompts:", error);
+      res.status(500).json({ message: "Failed to fetch prompts" });
+    }
+  });
+
+  app.post('/api/admin/prompts', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const prompt = await storage.createPrompt(req.body);
+      res.json(prompt);
+    } catch (error) {
+      console.error("Error creating prompt:", error);
+      res.status(500).json({ message: "Failed to create prompt" });
+    }
+  });
+
+  app.get('/api/admin/groups', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const groups = await storage.getAllGroups();
+      res.json(groups);
+    } catch (error) {
+      console.error("Error fetching groups:", error);
+      res.status(500).json({ message: "Failed to fetch groups" });
+    }
+  });
+
+  app.post('/api/admin/groups', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const group = await storage.createGroup(req.body);
+      res.json(group);
+    } catch (error) {
+      console.error("Error creating group:", error);
+      res.status(500).json({ message: "Failed to create group" });
+    }
+  });
+
+  app.get('/api/admin/moderation', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const reports = await storage.getModerationQueue();
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching moderation queue:", error);
+      res.status(500).json({ message: "Failed to fetch moderation queue" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket service

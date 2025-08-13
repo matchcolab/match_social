@@ -10,6 +10,7 @@ import Groups from "@/pages/groups";
 import Introductions from "@/pages/introductions";
 import Discover from "@/pages/discover";
 import Profile from "@/pages/profile";
+import Admin from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
           <Route path="/introductions" component={Introductions} />
           <Route path="/discover" component={Discover} />
           <Route path="/profile" component={Profile} />
+          <Route path="/admin" component={Admin} />
         </>
       )}
       <Route component={NotFound} />

@@ -26,6 +26,7 @@ export default function Sidebar({ user, onlineCount }: SidebarProps) {
     { path: "/introductions", label: "Introductions", icon: Handshake, badge: "1" },
     { path: "/discover", label: "Discover", icon: Compass },
     { path: "/profile", label: "My Connections", icon: TrendingUp },
+    ...(user.role === 'admin' ? [{ path: "/admin", label: "Admin Dashboard", icon: Settings }] : []),
   ];
 
   const getInitials = (firstName?: string, lastName?: string) => {

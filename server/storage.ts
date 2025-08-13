@@ -65,6 +65,19 @@ export interface IStorage {
     activeGroups: number;
     onlineUsers: number;
   }>;
+
+  // Admin operations
+  getAdminStats(): Promise<{
+    totalUsers: number;
+    newUsersToday: number;
+    activePrompts: number;
+    totalResponses: number;
+    pendingModeration: number;
+    healthScore: number;
+  }>;
+  getAllUsers(): Promise<User[]>;
+  createGroup(group: InsertGroup): Promise<Group>;
+  getModerationQueue(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -372,6 +385,73 @@ export class DatabaseStorage implements IStorage {
       activeGroups: activeGroupsCount.count,
       onlineUsers: Math.floor(Math.random() * 20) + 40, // Simulated online count
     };
+  }
+
+  async getAdminStats(): Promise<{
+    totalUsers: number;
+    newUsersToday: number;
+    activePrompts: number;
+    totalResponses: number;
+    pendingModeration: number;
+    healthScore: number;
+  }> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [totalUsersCount] = await db.select({ count: count() }).from(users);
+    const [newUsersCount] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(sql`${users.createdAt} >= ${today}`);
+    
+    const [activePromptsCount] = await db
+      .select({ count: count() })
+      .from(prompts)
+      .where(eq(prompts.isActive, true));
+    
+    const [totalResponsesCount] = await db
+      .select({ count: count() })
+      .from(responses)
+      .where(sql`${responses.createdAt} >= ${today}`);
+    
+    const [pendingModerationCount] = await db
+      .select({ count: count() })
+      .from(responses)
+      .where(eq(responses.isModerated, false));
+    
+    return {
+      totalUsers: totalUsersCount.count,
+      newUsersToday: newUsersCount.count,
+      activePrompts: activePromptsCount.count,
+      totalResponses: totalResponsesCount.count,
+      pendingModeration: pendingModerationCount.count,
+      healthScore: 85, // Calculated based on community metrics
+    };
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async createGroup(groupData: InsertGroup): Promise<Group> {
+    const [group] = await db.insert(groups).values(groupData).returning();
+    return group;
+  }
+
+  async getModerationQueue(): Promise<any[]> {
+    const reports = await db
+      .select({
+        id: responses.id,
+        content: responses.content,
+        createdAt: responses.createdAt,
+        reporterName: sql<string>`${users.firstName} || ' ' || ${users.lastName}`,
+      })
+      .from(responses)
+      .leftJoin(users, eq(responses.userId, users.id))
+      .where(eq(responses.isModerated, false))
+      .orderBy(desc(responses.createdAt));
+    
+    return reports;
   }
 }
 
