@@ -76,15 +76,27 @@ export default function RightSidebar({ userId }: RightSidebarProps) {
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-slate-800 mb-4">Quick Actions</h3>
         <div className="space-y-2">
-          <Button variant="ghost" className="w-full justify-start p-3 bg-slate-50 hover:bg-slate-100">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start p-3 bg-slate-50 hover:bg-slate-100"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
             <Plus className="h-4 w-4 mr-3 text-primary" />
             <span className="text-sm font-medium text-slate-700">Share Something</span>
           </Button>
-          <Button variant="ghost" className="w-full justify-start p-3 bg-slate-50 hover:bg-slate-100">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start p-3 bg-slate-50 hover:bg-slate-100"
+            onClick={() => window.location.href = '/groups'}
+          >
             <Search className="h-4 w-4 mr-3 text-accent" />
             <span className="text-sm font-medium text-slate-700">Find New Groups</span>
           </Button>
-          <Button variant="ghost" className="w-full justify-start p-3 bg-slate-50 hover:bg-slate-100">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start p-3 bg-slate-50 hover:bg-slate-100"
+            onClick={() => window.location.href = '/profile'}
+          >
             <User className="h-4 w-4 mr-3 text-secondary" />
             <span className="text-sm font-medium text-slate-700">Update Profile</span>
           </Button>

@@ -13,6 +13,7 @@ import { socialProfileSchema, type SocialProfileInput } from "@shared/schema";
 import { Users, Instagram, Facebook, Linkedin, ArrowRight, CheckCircle } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function SocialProfile() {
   const [, setLocation] = useLocation();
@@ -38,28 +39,25 @@ export default function SocialProfile() {
 
   const socialProfileMutation = useMutation({
     mutationFn: async (data: SocialProfileInput) => {
-      const response = await fetch('/api/onboarding/social-profile', {
+      const response = await apiRequest('/api/onboarding/social-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
-      }
-      return response.json();
+      return response;
     },
     onSuccess: () => {
       toast({
         title: "Social Profile Complete!",
         description: "You can now participate in group activities",
       });
-      setLocation('/onboarding/progress');
+      window.location.reload(); // This will trigger the onboarding flow redirect
     },
     onError: (error) => {
+      console.error('Social profile error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: "Failed to update profile. Please try again.",
         variant: "destructive",
       });
     },
