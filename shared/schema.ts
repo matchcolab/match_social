@@ -27,20 +27,97 @@ export const sessions = pgTable(
 
 // User storage table
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin']);
+export const genderEnum = pgEnum('gender', ['male', 'female', 'non_binary', 'prefer_not_to_say']);
+export const maritalStatusEnum = pgEnum('marital_status', ['single_never_married', 'divorced', 'separated_filed', 'separated_not_filed', 'married']);
+export const onboardingStatusEnum = pgEnum('onboarding_status', ['account_created', 'social_profile_completed', 'full_profile_completed', 'verified', 'subscribed']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  appId: varchar("app_id").unique(), // 6-character unique identifier
   email: varchar("email").unique(),
+  countryCode: varchar("country_code"),
+  mobileNumber: varchar("mobile_number"),
+  
+  // Basic Profile
   firstName: varchar("first_name"),
+  middleName: varchar("middle_name"),
   lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
-  age: integer("age"),
+  gender: genderEnum("gender"),
+  dateOfBirth: timestamp("date_of_birth"),
+  height: integer("height"), // in cm
+  maritalStatus: maritalStatusEnum("marital_status"),
+  hasChildren: boolean("has_children").default(false),
+  faith: varchar("faith"),
+  
+  // Location
+  country: varchar("country"),
+  state: varchar("state"),
+  city: varchar("city"),
   location: varchar("location"),
-  title: varchar("title"),
+  nationality: varchar("nationality"),
+  
+  // Social Profile
+  personalIntro: text("personal_intro"),
+  profileImageUrl: varchar("profile_image_url"),
+  instagramUrl: varchar("instagram_url"),
+  facebookUrl: varchar("facebook_url"),
+  linkedinUrl: varchar("linkedin_url"),
+  
+  // Lifestyle & Habits
+  smoking: varchar("smoking"), // never, occasionally, regularly
+  drinking: varchar("drinking"), // never, socially, regularly
+  diet: varchar("diet"), // vegetarian, non_vegetarian, vegan, etc
+  workout: varchar("workout"), // never, occasionally, regularly
+  interests: text("interests"),
+  languages: text("languages"), // JSON array
+  
+  // Professional Details
+  education: varchar("education"),
+  degree: varchar("degree"),
+  institution: varchar("institution"),
+  professionalIntro: text("professional_intro"),
+  industry: varchar("industry"),
+  currency: varchar("currency"),
+  incomeRange: varchar("income_range"),
+  
+  // Documents
+  idDocumentType: varchar("id_document_type"),
+  idDocumentNumber: varchar("id_document_number"),
+  
+  // Match Preferences
+  preferredAgeMin: integer("preferred_age_min"),
+  preferredAgeMax: integer("preferred_age_max"),
+  preferredHeightMin: integer("preferred_height_min"),
+  preferredHeightMax: integer("preferred_height_max"),
+  preferredSmoking: varchar("preferred_smoking"),
+  preferredDrinking: varchar("preferred_drinking"),
+  preferredFaith: varchar("preferred_faith"),
+  preferredMaritalStatus: varchar("preferred_marital_status"),
+  willingToRelocate: boolean("willing_to_relocate").default(false),
+  acceptSingleParent: boolean("accept_single_parent").default(false),
+  additionalPreferences: text("additional_preferences"),
+  
+  // About Me
   bio: text("bio"),
+  familyDetails: text("family_details"),
+  healthConcerns: text("health_concerns"),
+  photoUrls: text("photo_urls"), // JSON array of up to 5 images
+  
+  // Profile Visibility
+  profileVisibility: varchar("profile_visibility").default('public'), // public, private, contacts_only
+  publicProfileFields: text("public_profile_fields"), // JSON array of fields to show publicly
+  
+  // System fields
   role: userRoleEnum("role").default('user'),
+  onboardingStatus: onboardingStatusEnum("onboarding_status").default('account_created'),
   isVerified: boolean("is_verified").default(false),
+  isSubscribed: boolean("is_subscribed").default(false),
   trustScore: integer("trust_score").default(0),
+  termsAccepted: boolean("terms_accepted").default(false),
+  privacyAccepted: boolean("privacy_accepted").default(false),
+  guidelinesAccepted: boolean("guidelines_accepted").default(false),
+  verificationCallCompleted: boolean("verification_call_completed").default(false),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -226,6 +303,89 @@ export const insertIntroductionSchema = createInsertSchema(introductions);
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// Onboarding step schemas
+export const signupSchema = createInsertSchema(users).pick({
+  firstName: true,
+  lastName: true,
+  email: true,
+  countryCode: true,
+  mobileNumber: true,
+  termsAccepted: true,
+  privacyAccepted: true,
+  guidelinesAccepted: true,
+}).extend({
+  termsAccepted: z.boolean().refine(val => val === true, {
+    message: "You must accept the Terms of Service",
+  }),
+  privacyAccepted: z.boolean().refine(val => val === true, {
+    message: "You must accept the Privacy Policy",
+  }),
+  guidelinesAccepted: z.boolean().refine(val => val === true, {
+    message: "You must accept the Community Guidelines",
+  }),
+});
+
+export const socialProfileSchema = createInsertSchema(users).pick({
+  firstName: true,
+  lastName: true,
+  gender: true,
+  dateOfBirth: true,
+  city: true,
+  maritalStatus: true,
+  personalIntro: true,
+  instagramUrl: true,
+  facebookUrl: true,
+  linkedinUrl: true,
+}).extend({
+  socialVerification: z.string().min(1, "At least one social connection is required"),
+});
+
+export const fullProfileSchema = createInsertSchema(users).pick({
+  middleName: true,
+  height: true,
+  hasChildren: true,
+  faith: true,
+  country: true,
+  state: true,
+  nationality: true,
+  smoking: true,
+  drinking: true,
+  diet: true,
+  workout: true,
+  interests: true,
+  languages: true,
+  education: true,
+  degree: true,
+  institution: true,
+  professionalIntro: true,
+  industry: true,
+  currency: true,
+  incomeRange: true,
+  idDocumentType: true,
+  idDocumentNumber: true,
+  preferredAgeMin: true,
+  preferredAgeMax: true,
+  preferredHeightMin: true,
+  preferredHeightMax: true,
+  preferredSmoking: true,
+  preferredDrinking: true,
+  preferredFaith: true,
+  preferredMaritalStatus: true,
+  willingToRelocate: true,
+  acceptSingleParent: true,
+  additionalPreferences: true,
+  bio: true,
+  familyDetails: true,
+  healthConcerns: true,
+  photoUrls: true,
+  profileVisibility: true,
+  publicProfileFields: true,
+});
+
+export type SignupInput = z.infer<typeof signupSchema>;
+export type SocialProfileInput = z.infer<typeof socialProfileSchema>;
+export type FullProfileInput = z.infer<typeof fullProfileSchema>;
 export type Prompt = typeof prompts.$inferSelect;
 export type InsertPrompt = z.infer<typeof insertPromptSchema>;
 export type Response = typeof responses.$inferSelect;

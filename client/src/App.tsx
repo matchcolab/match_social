@@ -12,12 +12,18 @@ import Discover from "@/pages/discover";
 import Profile from "@/pages/profile";
 import Admin from "@/pages/admin";
 import NotFound from "@/pages/not-found";
+import Signup from "@/pages/signup";
+import SocialProfile from "@/pages/onboarding/social-profile";
+import OnboardingProgress from "@/pages/onboarding/progress";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <Switch>
+      <Route path="/signup" component={Signup} />
+      <Route path="/onboarding/social-profile" component={SocialProfile} />
+      <Route path="/onboarding/progress" component={OnboardingProgress} />
       {isLoading || !isAuthenticated ? (
         <Route path="/" component={Landing} />
       ) : (

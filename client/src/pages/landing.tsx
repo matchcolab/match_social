@@ -17,15 +17,27 @@ export default function Landing() {
               A community-first networking platform where meaningful connections grow through 
               authentic conversations, shared experiences, and trusted introductions.
             </p>
-            <div className="mt-10">
+            <div className="mt-10 space-y-4">
               <Button 
                 size="lg" 
                 className="px-8 py-4 text-lg font-semibold"
-                onClick={() => window.location.href = '/api/login'}
+                onClick={() => window.location.href = '/signup'}
               >
                 Join the Community
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
+              <div className="text-center">
+                <p className="text-secondary">
+                  Already have an account?{" "}
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto text-primary font-semibold"
+                    onClick={() => window.location.href = '/api/login'}
+                  >
+                    Sign in
+                  </Button>
+                </p>
+              </div>
             </div>
           </div>
         </div>

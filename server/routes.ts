@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { generateAppId } from "./utils";
+import { signupSchema, socialProfileSchema, fullProfileSchema } from "@shared/schema";
 import { CommunityWebSocket } from "./services/websocket";
 import { moderateContent, analyzeSentiment, generateIntroductionContext } from "./services/openai";
 import { insertResponseSchema, insertCommentSchema, insertIntroductionSchema } from "@shared/schema";
@@ -87,6 +89,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating response:", error);
       res.status(500).json({ message: "Failed to create response" });
+    }
+  });
+
+  // Signup route (public)
+  app.post('/api/auth/signup', async (req, res) => {
+    try {
+      const validation = signupSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: validation.error.issues });
+      }
+
+      const userData = validation.data;
+      const appId = generateAppId();
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(userData.email);
+      if (existingUser) {
+        return res.status(409).json({ error: "User already exists" });
+      }
+
+      const user = await storage.createUser({
+        ...userData,
+        appId,
+        onboardingStatus: 'account_created',
+      });
+
+      res.json({ message: "Account created successfully", appId: user.appId });
+    } catch (error) {
+      console.error("Signup error:", error);
+      res.status(500).json({ error: "Failed to create account" });
+    }
+  });
+
+  // Onboarding routes
+  app.post('/api/onboarding/social-profile', isAuthenticated, async (req, res) => {
+    try {
+      const validation = socialProfileSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: validation.error.issues });
+      }
+
+      const userId = req.user?.claims?.sub;
+      const profileData = validation.data;
+
+      await storage.updateUser(userId, {
+        ...profileData,
+        onboardingStatus: 'social_profile_completed',
+      });
+
+      res.json({ message: "Social profile completed" });
+    } catch (error) {
+      console.error("Social profile error:", error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  app.post('/api/onboarding/full-profile', isAuthenticated, async (req, res) => {
+    try {
+      const validation = fullProfileSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: validation.error.issues });
+      }
+
+      const userId = req.user?.claims?.sub;
+      const profileData = validation.data;
+
+      await storage.updateUser(userId, {
+        ...profileData,
+        onboardingStatus: 'full_profile_completed',
+      });
+
+      res.json({ message: "Full profile completed" });
+    } catch (error) {
+      console.error("Full profile error:", error);
+      res.status(500).json({ error: "Failed to update profile" });
     }
   });
 
