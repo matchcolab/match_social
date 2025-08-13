@@ -6,6 +6,7 @@ import Sidebar from "@/components/layout/sidebar";
 import MobileHeader from "@/components/layout/mobile-header";
 import MobileBottomNav from "@/components/layout/mobile-bottom-nav";
 import RightSidebar from "@/components/layout/right-sidebar";
+import ProfileEditor from "@/components/profile-editor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -259,16 +260,16 @@ export default function Profile() {
             <Tabs defaultValue="activity" className="space-y-4">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="activity">
-                  <TrendingUp className="h-4 w-4 mr-2" />
+                  <Activity className="h-4 w-4 mr-2" />
                   Activity
                 </TabsTrigger>
                 <TabsTrigger value="connections">
                   <Users className="h-4 w-4 mr-2" />
                   Connections
                 </TabsTrigger>
-                <TabsTrigger value="settings">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Account
+                <TabsTrigger value="edit-profile">
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Edit Profile
                 </TabsTrigger>
               </TabsList>
 
@@ -379,139 +380,17 @@ export default function Profile() {
               </TabsContent>
 
               {/* Account Settings Tab */}
-              <TabsContent value="settings" className="space-y-4">
-                {isEditing ? (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Edit Profile</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="firstName">First Name</Label>
-                          <Input 
-                            id="firstName" 
-                            defaultValue={(user as any)?.firstName || ""} 
-                            className="mt-1"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="lastName">Last Name</Label>
-                          <Input 
-                            id="lastName" 
-                            defaultValue={(user as any)?.lastName || ""} 
-                            className="mt-1"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="city">City</Label>
-                        <Input 
-                          id="city" 
-                          defaultValue={(user as any)?.city || ""} 
-                          placeholder="e.g., San Francisco"
-                          className="mt-1"
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                          <Input 
-                            id="dateOfBirth" 
-                            type="date" 
-                            defaultValue={(user as any)?.dateOfBirth || ""} 
-                            className="mt-1"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="gender">Gender</Label>
-                          <Input 
-                            id="gender" 
-                            defaultValue={(user as any)?.gender || ""} 
-                            placeholder="Gender"
-                            className="mt-1"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="personalIntro">Personal Introduction</Label>
-                        <Textarea 
-                          id="personalIntro" 
-                          defaultValue={(user as any)?.personalIntro || ""} 
-                          placeholder="Tell the community about yourself..."
-                          className="mt-1"
-                          rows={3}
-                        />
-                      </div>
-                      
-                      <div className="flex space-x-3">
-                        <Button className="flex-1" onClick={() => {
-                          toast({
-                            title: "Profile Updated",
-                            description: "Your changes have been saved successfully.",
-                          });
-                          setIsEditing(false);
-                        }}>Save Changes</Button>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setIsEditing(false)}
-                          className="flex-1"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <>
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Privacy & Security</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span>Profile visibility</span>
-                          <Badge>Public</Badge>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span>Introduction requests</span>
-                          <Badge variant="outline">Premium only</Badge>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span>Email notifications</span>
-                          <Badge>Enabled</Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Account Actions</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <Button variant="outline" className="w-full justify-start">
-                          <Shield className="h-4 w-4 mr-2" />
-                          Privacy Settings
-                        </Button>
-                        <Button variant="outline" className="w-full justify-start">
-                          <Settings className="h-4 w-4 mr-2" />
-                          Notification Preferences  
-                        </Button>
-                        <Button 
-                          variant="destructive" 
-                          className="w-full justify-start"
-                          onClick={handleLogout}
-                        >
-                          <LogOut className="h-4 w-4 mr-2" />
-                          Sign Out
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </>
-                )}
+              {/* Edit Profile Tab */}
+              <TabsContent value="edit-profile" className="space-y-4">
+                <ProfileEditor 
+                  user={user as any}
+                  onSuccess={() => {
+                    toast({
+                      title: "Profile Updated",
+                      description: "Your changes have been saved successfully.",
+                    });
+                  }}
+                />
               </TabsContent>
             </Tabs>
           </div>

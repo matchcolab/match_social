@@ -39,12 +39,7 @@ export default function SocialProfile() {
 
   const socialProfileMutation = useMutation({
     mutationFn: async (data: SocialProfileInput) => {
-      const response = await apiRequest('/api/onboarding/social-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      return response;
+      return await apiRequest('POST', '/api/onboarding/social-profile', data);
     },
     onSuccess: () => {
       toast({
