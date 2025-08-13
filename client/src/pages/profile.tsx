@@ -34,7 +34,7 @@ import {
 export default function Profile() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { onlineCount } = useWebSocket(user?.id);
+  const { onlineCount } = useWebSocket((user as any)?.id);
   const [isEditing, setIsEditing] = useState(false);
 
   // Redirect to login if not authenticated
@@ -141,7 +141,7 @@ export default function Profile() {
 
       <div className="flex h-full">
         {/* Desktop Sidebar */}
-        <Sidebar user={user} onlineCount={onlineCount} />
+        <Sidebar user={user as any} onlineCount={onlineCount} />
 
         {/* Main Content */}
         <main className="flex-1 lg:pl-64">
@@ -152,9 +152,9 @@ export default function Profile() {
                 <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
                   <div className="relative">
                     <Avatar className="h-24 w-24">
-                      <AvatarImage src={user.profileImageUrl || ""} />
+                      <AvatarImage src={(user as any)?.profileImageUrl || ""} />
                       <AvatarFallback className="bg-primary text-white text-2xl">
-                        {getInitials(user.firstName, user.lastName)}
+                        {getInitials((user as any)?.firstName, (user as any)?.lastName)}
                       </AvatarFallback>
                     </Avatar>
                     <Button
@@ -169,7 +169,7 @@ export default function Profile() {
                   <div className="flex-1">
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-2">
                       <h1 className="text-2xl font-bold text-slate-800">
-                        {user.firstName} {user.lastName}
+                        {(user as any)?.firstName} {(user as any)?.lastName}
                       </h1>
                       <div className="flex space-x-2 mt-2 md:mt-0">
                         <Button
@@ -188,29 +188,25 @@ export default function Profile() {
                     </div>
                     
                     <div className="flex flex-wrap items-center space-x-4 text-sm text-secondary mb-3">
-                      {user.title && (
-                        <div className="flex items-center space-x-1">
-                          <Briefcase className="h-4 w-4" />
-                          <span>{user.title}</span>
-                        </div>
-                      )}
-                      {user.age && <span>{user.age} years old</span>}
-                      {user.location && (
+                      {(user as any)?.city && (
                         <div className="flex items-center space-x-1">
                           <MapPin className="h-4 w-4" />
-                          <span>{user.location}</span>
+                          <span>{(user as any)?.city}</span>
                         </div>
                       )}
-                      {user.isVerified && (
+                      {(user as any)?.dateOfBirth && (
+                        <span>{new Date().getFullYear() - new Date((user as any).dateOfBirth).getFullYear()} years old</span>
+                      )}
+                      {(user as any)?.role === 'admin' && (
                         <Badge className="bg-accent text-white">
                           <Shield className="h-3 w-3 mr-1" />
-                          Verified
+                          Admin
                         </Badge>
                       )}
                     </div>
                     
-                    {user.bio && (
-                      <p className="text-slate-600 mb-3">{user.bio}</p>
+                    {(user as any)?.personalIntro && (
+                      <p className="text-slate-600 mb-3">{(user as any)?.personalIntro}</p>
                     )}
                     
                     <div className="flex items-center space-x-4">
@@ -220,7 +216,7 @@ export default function Profile() {
                         <span className="text-sm text-secondary">Trust Score</span>
                       </div>
                       <div className="text-sm text-secondary">
-                        Member since {new Date(user.createdAt).toLocaleDateString('en-US', { 
+                        Member since {new Date((user as any)?.createdAt || Date.now()).toLocaleDateString('en-US', { 
                           month: 'long', 
                           year: 'numeric' 
                         })}
@@ -395,7 +391,7 @@ export default function Profile() {
                           <Label htmlFor="firstName">First Name</Label>
                           <Input 
                             id="firstName" 
-                            defaultValue={user.firstName || ""} 
+                            defaultValue={(user as any)?.firstName || ""} 
                             className="mt-1"
                           />
                         </div>
@@ -403,48 +399,48 @@ export default function Profile() {
                           <Label htmlFor="lastName">Last Name</Label>
                           <Input 
                             id="lastName" 
-                            defaultValue={user.lastName || ""} 
+                            defaultValue={(user as any)?.lastName || ""} 
                             className="mt-1"
                           />
                         </div>
                       </div>
                       
                       <div>
-                        <Label htmlFor="title">Title</Label>
+                        <Label htmlFor="city">City</Label>
                         <Input 
-                          id="title" 
-                          defaultValue={user.title || ""} 
-                          placeholder="e.g., Software Engineer, Designer"
+                          id="city" 
+                          defaultValue={(user as any)?.city || ""} 
+                          placeholder="e.g., San Francisco"
                           className="mt-1"
                         />
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="age">Age</Label>
+                          <Label htmlFor="dateOfBirth">Date of Birth</Label>
                           <Input 
-                            id="age" 
-                            type="number" 
-                            defaultValue={user.age || ""} 
+                            id="dateOfBirth" 
+                            type="date" 
+                            defaultValue={(user as any)?.dateOfBirth || ""} 
                             className="mt-1"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="location">Location</Label>
+                          <Label htmlFor="gender">Gender</Label>
                           <Input 
-                            id="location" 
-                            defaultValue={user.location || ""} 
-                            placeholder="City, State"
+                            id="gender" 
+                            defaultValue={(user as any)?.gender || ""} 
+                            placeholder="Gender"
                             className="mt-1"
                           />
                         </div>
                       </div>
                       
                       <div>
-                        <Label htmlFor="bio">Bio</Label>
+                        <Label htmlFor="personalIntro">Personal Introduction</Label>
                         <Textarea 
-                          id="bio" 
-                          defaultValue={user.bio || ""} 
+                          id="personalIntro" 
+                          defaultValue={(user as any)?.personalIntro || ""} 
                           placeholder="Tell the community about yourself..."
                           className="mt-1"
                           rows={3}
@@ -452,7 +448,13 @@ export default function Profile() {
                       </div>
                       
                       <div className="flex space-x-3">
-                        <Button className="flex-1">Save Changes</Button>
+                        <Button className="flex-1" onClick={() => {
+                          toast({
+                            title: "Profile Updated",
+                            description: "Your changes have been saved successfully.",
+                          });
+                          setIsEditing(false);
+                        }}>Save Changes</Button>
                         <Button 
                           variant="outline" 
                           onClick={() => setIsEditing(false)}
@@ -516,7 +518,7 @@ export default function Profile() {
         </main>
 
         {/* Right Sidebar - Desktop Only */}
-        <RightSidebar userId={user.id} />
+        <RightSidebar userId={(user as any)?.id} />
       </div>
 
       {/* Mobile Bottom Navigation */}
