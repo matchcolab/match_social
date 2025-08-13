@@ -1,0 +1,107 @@
+### Purpose
+
+We want to design an onboarding experience that ensures new users understand our community, feel safe, and are guided toward creating a meaningful profile that allows them to participate in activities, become verified, and, if they wish, purchase a subscription for introductions. This flow must balance ease of entry with enough information to ensure quality and trust within the platform.
+
+---
+
+### **Core Principles**
+
+1. **Safety & Trust** – We onboard only real people who are serious about finding a life partner.
+2. **Progressive Commitment** – Reduce friction at signup, but encourage deeper profile completion before unlocking key features.
+3. **Transparency** – Clearly explain what each step is for and how their information is used.
+4. **Participation Gating** – Users must complete a *short social profile* to join activities, a *comprehensive profile* for verification and subscription eligibility, and hold a paid subscription to request introductions.
+5. **Unique Identification** – No pseudonyms; each account is auto assigned a unique slug (6 chars). We show it to users as **App ID**. This will show up in their interactions - gender/age/slug something like M/25/abcd12
+
+---
+
+### **Onboarding Journey**
+
+#### **Step 1 – Minimal Account Setup**
+
+* User provides essential contact details (email or phone) and verifies via OTP.
+* Consent is collected for Terms of Service, Privacy Policy, and Community Guidelines.
+* The system assigns the user a **unique App ID** for internal and community identification.
+* Purpose: Quickly create a secure account and start tracking the onboarding journey.
+
+---
+
+#### **Step 2 – Short Social Profile (Required for Activities)**
+
+* Key personal details (name, age, gender, residential city).
+* Brief personal intro and marital status (single never married, divorced, separated (filed for divorce), separated (divorce not filed), married)
+* At least one verified social connection (Instagram, Facebook, or LinkedIn).
+* Purpose: Ensure credibility and context so they can participate in group activities, discussions, or events without full verification.
+
+---
+
+#### **Step 3 – Full Profile (Required for Subscription and Verification)**
+
+* Full background details: education, occupation, lifestyle choices, partner preferences, values, and interests.
+* Additional photos and a more detailed bio.
+* All responses are reviewed for authenticity and quality.
+* Purpose: Establish a complete identity, increase trust, and enable verification.
+
+Basic Profile: verification status, profile status (admin only); first/middle/last name, gender, DOB, height, marital status, children, faith, country/state/city/location, nationality, email, country code & mobile numbers
+Lifestyle & Habits:  Smoking, drinking, diet, workout, interests (rich text), ID document & number, languages spoken, LinkedIn/Instagram/Facebook links
+Professional Details:  Educational qualification, degree details, institution, professional introduction, industry sector, currency, income range
+Match Preferences: Age range, height range, smoking/drinking preferences, faith preferences, marital‑status preferences, willingness for single parent/relocation, additional preferences, profile visibility & public‑profile field toggles
+About Me:  Bio, family details, health concerns, photo uploads (up to five images)
+
+these are the fields and soft grouping for reference. how we actually group and implement them is whatever approach is best as per the theme and flow of the app
+
+---
+
+#### **Step 4 – Verification**
+
+* Social verification (preferred) or manual review process.
+* Only verified users are eligible for subscriptions.
+* Purpose: Maintain a safe, authentic member base.
+
+---
+
+#### **Step 5 – Subscription Gating for Introductions**
+
+* Users need to purchase subscription and get verified over a 1-1 call producing their ID cards for verification during the call
+* Only subscribed, verified users may request or receive direct introductions.
+* Purpose: Create commitment, prevent casual misuse and fund the quality-matching process.
+
+---
+
+#### **Step 6 – First Participation**
+
+* After completing the short social profile, the user can:
+
+  * Join group activities or discussions.
+  * Receive daily/weekly prompts for engagement.
+* Once verified and subscribed, they can:
+
+  * Request personalised introductions.
+  * Access premium events or curated matchmaking features.
+* Purpose: Build early engagement while nudging toward verification and subscription.
+
+---
+
+### **Why This Matters**
+
+* **Safety**: Ensures only genuine, committed individuals can interact meaningfully.
+* **Quality**: The short social profile filters out unserious participants before they enter group spaces.
+* **Trust**: The comprehensive profile and verification build credibility and foster respectful interactions.
+* **Revenue & Sustainability**: Subscription gating for introductions ensures a committed pool of participants and supports the operational model.
+* **Scalability**: App IDs and clear participation thresholds make it easy to manage user progression across different stages of the service.
+
+---
+
+The public signup form collects:
+
+    First name
+
+    Last name
+
+    Email address
+
+    Country code
+
+    Mobile number
+
+    Agreement to Terms of Service and Privacy Policy
+

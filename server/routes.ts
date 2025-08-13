@@ -385,6 +385,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Full profile update endpoint
+  app.post('/api/profile/full-update', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profileData = req.body;
+      
+      const updatedUser = await storage.updateUser(userId, profileData);
+      
+      res.json({
+        success: true,
+        message: 'Full profile updated successfully',
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error updating full profile:", error);
+      res.status(500).json({ message: "Failed to update full profile" });
+    }
+  });
+
   // Community stats
   app.get('/api/stats', async (req, res) => {
     try {

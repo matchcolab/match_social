@@ -7,6 +7,7 @@ import MobileHeader from "@/components/layout/mobile-header";
 import MobileBottomNav from "@/components/layout/mobile-bottom-nav";
 import RightSidebar from "@/components/layout/right-sidebar";
 import ProfileEditor from "@/components/profile-editor";
+import FullProfileEditor from "@/components/full-profile-editor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -266,7 +267,7 @@ export default function Profile() {
 
             {/* Profile Tabs */}
             <Tabs defaultValue="activity" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="activity">
                   <Activity className="h-4 w-4 mr-2" />
                   Activity
@@ -277,7 +278,11 @@ export default function Profile() {
                 </TabsTrigger>
                 <TabsTrigger value="edit-profile">
                   <Edit3 className="h-4 w-4 mr-2" />
-                  Edit Profile
+                  Basic Profile
+                </TabsTrigger>
+                <TabsTrigger value="full-profile">
+                  <User className="h-4 w-4 mr-2" />
+                  Complete Profile
                 </TabsTrigger>
               </TabsList>
 
@@ -396,6 +401,18 @@ export default function Profile() {
                     toast({
                       title: "Profile Updated",
                       description: "Your changes have been saved successfully.",
+                    });
+                  }}
+                />
+              </TabsContent>
+
+              <TabsContent value="full-profile" className="space-y-4">
+                <FullProfileEditor 
+                  user={user as any}
+                  onSuccess={() => {
+                    toast({
+                      title: "Complete Profile Updated",
+                      description: "Your full profile has been saved successfully.",
                     });
                   }}
                 />
