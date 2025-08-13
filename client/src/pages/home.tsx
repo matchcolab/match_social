@@ -62,14 +62,14 @@ export default function Home() {
   return (
     <div className="h-full bg-background font-sans text-slate-800 antialiased">
       {/* Mobile Header */}
-      <MobileHeader onlineCount={onlineCount} />
+      <MobileHeader onlineCount={onlineCount} user={user} />
 
       <div className="flex h-full">
         {/* Desktop Sidebar */}
         <Sidebar user={user} onlineCount={onlineCount} />
 
         {/* Main Content */}
-        <main className="flex-1 lg:pl-64">
+        <main className="flex-1 xl:pl-64">
           <div className="max-w-4xl mx-auto">
             {/* Daily Prompt Section */}
             <DailyPrompt user={user} />

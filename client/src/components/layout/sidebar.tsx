@@ -34,7 +34,7 @@ export default function Sidebar({ user, onlineCount }: SidebarProps) {
   };
 
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-white border-r border-slate-200">
+    <aside className="hidden xl:flex xl:flex-col xl:w-64 xl:fixed xl:inset-y-0 bg-white border-r border-slate-200">
       <div className="flex-1 flex flex-col overflow-y-auto">
         {/* Logo and Brand */}
         <div className="p-6 border-b border-slate-200">

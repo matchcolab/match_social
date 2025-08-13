@@ -1,17 +1,44 @@
 import { useState } from "react";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Bell, Menu } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  Bell, 
+  Menu, 
+  Home, 
+  Users, 
+  Handshake, 
+  Compass, 
+  User,
+  Settings,
+  Crown
+} from "lucide-react";
 
 interface MobileHeaderProps {
   onlineCount: number;
+  user?: any;
 }
 
-export default function MobileHeader({ onlineCount }: MobileHeaderProps) {
+export default function MobileHeader({ onlineCount, user }: MobileHeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [location] = useLocation();
+
+  const navItems = [
+    { path: "/", label: "Today's Community", icon: Home },
+    { path: "/groups", label: "My Groups", icon: Users, badge: "2" },
+    { path: "/introductions", label: "Introductions", icon: Handshake, badge: "1" },
+    { path: "/discover", label: "Discover", icon: Compass },
+    { path: "/profile", label: "Profile", icon: User },
+    ...(user?.role === 'admin' ? [{ path: "/admin", label: "Admin Dashboard", icon: Settings }] : []),
+  ];
+
+  const getInitials = (firstName?: string, lastName?: string) => {
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase() || 'U';
+  };
 
   return (
-    <header className="lg:hidden bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-50">
+    <header className="xl:hidden bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-50">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -20,12 +47,90 @@ export default function MobileHeader({ onlineCount }: MobileHeaderProps) {
                 <Menu className="h-5 w-5 text-slate-600" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
+            <SheetContent side="left" className="w-80 p-0">
               <div className="p-6 border-b border-slate-200">
                 <h1 className="text-xl font-bold text-primary">Match Colab</h1>
                 <p className="text-sm text-secondary mt-1">Community-first networking</p>
               </div>
-              {/* Add mobile navigation menu here */}
+
+              {/* Real-time Status */}
+              <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
+                    <span className="text-accent font-medium">{onlineCount} online now</span>
+                  </div>
+                  <span className="text-secondary">3 new</span>
+                </div>
+              </div>
+
+              {/* Navigation Menu */}
+              <nav className="flex-1 px-4 py-4 space-y-2">
+                {navItems.map((item) => {
+                  const isActive = location === item.path;
+                  return (
+                    <Link key={item.path} href={item.path}>
+                      <button 
+                        onClick={() => setIsOpen(false)}
+                        className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                          isActive 
+                            ? "text-primary bg-blue-50 border-l-4 border-primary" 
+                            : "text-secondary hover:text-slate-800 hover:bg-slate-50"
+                        }`}
+                      >
+                        <item.icon className="w-5 h-5 mr-3" />
+                        {item.label}
+                        {item.badge && (
+                          <span className="ml-auto bg-accent text-white text-xs px-2 py-1 rounded-full">
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              {/* Premium Upgrade */}
+              <div className="p-4 border-t border-slate-200">
+                <div className="bg-gradient-to-r from-primary to-accent p-4 rounded-lg text-white text-sm">
+                  <div className="flex items-center mb-2">
+                    <Crown className="h-4 w-4 mr-2" />
+                    <h3 className="font-semibold">Unlock Introductions</h3>
+                  </div>
+                  <p className="text-blue-100 mb-3">Connect privately with community members</p>
+                  <Button className="w-full bg-white text-primary font-medium py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors">
+                    Upgrade Now
+                  </Button>
+                </div>
+              </div>
+
+              {/* User Profile */}
+              {user && (
+                <div className="p-4 border-t border-slate-200">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user.profileImageUrl || ""} alt="Profile" />
+                      <AvatarFallback className="bg-primary text-white">
+                        {getInitials(user.firstName, user.lastName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-800 truncate">
+                        {user.firstName} {user.lastName}
+                      </p>
+                      <p className="text-xs text-secondary truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                    <Link href="/api/logout">
+                      <Button variant="ghost" size="sm" className="text-xs">
+                        Sign out
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
             </SheetContent>
           </Sheet>
           <h1 className="text-xl font-semibold text-primary">Match Colab</h1>
