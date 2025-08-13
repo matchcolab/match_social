@@ -38,6 +38,9 @@ export default function Profile() {
   const { onlineCount } = useWebSocket((user as any)?.id);
   const [isEditing, setIsEditing] = useState(false);
 
+  // Debug authentication state
+  console.log('Profile component - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'user:', user);
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -126,6 +129,7 @@ export default function Profile() {
 
   // Show loading state during authentication
   if (isLoading) {
+    console.log('Profile: showing loading state');
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -138,8 +142,11 @@ export default function Profile() {
   
   // Show profile content even if user data is minimal
   if (!isAuthenticated) {
+    console.log('Profile: not authenticated, returning null');
     return null; // Will trigger redirect in useEffect
   }
+
+  console.log('Profile: rendering profile page');
 
   return (
     <div className="h-full bg-background font-sans text-slate-800 antialiased">
