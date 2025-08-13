@@ -21,7 +21,7 @@ import {
   Edit3, 
   Settings, 
   Shield, 
-  TrendingUp, 
+  Activity, 
   Heart,
   MessageCircle,
   Users,
@@ -124,15 +124,21 @@ export default function Profile() {
     },
   ];
 
-  if (isLoading || !isAuthenticated || !user) {
+  // Show loading state during authentication
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-secondary">Loading your profile...</p>
+          <p className="text-muted-foreground">Loading your profile...</p>
         </div>
       </div>
     );
+  }
+  
+  // Show profile content even if user data is minimal
+  if (!isAuthenticated) {
+    return null; // Will trigger redirect in useEffect
   }
 
   return (
