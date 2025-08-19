@@ -50,7 +50,7 @@ export default function ActivityFeedHome() {
             <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">Stay tuned!</h3>
             <p className="text-muted-foreground">
-              Admin updates and community activities will appear here.
+              Community activities and admin posts will appear here. Users can comment and react to engage with the community.
             </p>
           </div>
         </CardContent>
