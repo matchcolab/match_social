@@ -11,6 +11,7 @@ import DailyPrompt from "@/components/daily-prompt";
 import ResponsesFeed from "@/components/responses-feed";
 import GroupDiscovery from "@/components/group-discovery";
 import IntroductionModal from "@/components/modals/introduction-modal";
+import ActivityFeedHome from "@/components/activity-feed-home";
 
 export default function Home() {
   const { toast } = useToast();
@@ -73,6 +74,9 @@ export default function Home() {
           <div className="max-w-4xl mx-auto">
             {/* Daily Prompt Section */}
             <DailyPrompt user={user} />
+
+            {/* Admin Community Activities */}
+            <ActivityFeedHome />
 
             {/* Community Responses Feed */}
             <ResponsesFeed userId={user.id} />

@@ -570,6 +570,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Activity Routes
+  app.post('/api/admin/activities', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const adminId = req.user.claims.sub;
+      const activityData = {
+        ...req.body,
+        adminId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const activity = await storage.createAdminActivity(activityData);
+      res.json(activity);
+    } catch (error) {
+      console.error("Error creating admin activity:", error);
+      res.status(500).json({ message: "Failed to create activity" });
+    }
+  });
+
+  app.get('/api/admin/activities', async (req, res) => {
+    try {
+      const activities = await storage.getAdminActivities();
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching admin activities:", error);
+      res.status(500).json({ message: "Failed to fetch activities" });
+    }
+  });
+
+  app.post('/api/admin/activities/:activityId/comments', isAuthenticated, async (req: any, res) => {
+    try {
+      const { activityId } = req.params;
+      const userId = req.user.claims.sub;
+      const commentData = {
+        ...req.body,
+        activityId,
+        userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const comment = await storage.createActivityComment(commentData);
+      await storage.updateCommentCounts(activityId);
+      res.json(comment);
+    } catch (error) {
+      console.error("Error creating activity comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  app.get('/api/admin/activities/:activityId/comments', async (req, res) => {
+    try {
+      const { activityId } = req.params;
+      const comments = await storage.getActivityComments(activityId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching activity comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  app.post('/api/admin/activities/:activityId/reactions', isAuthenticated, async (req: any, res) => {
+    try {
+      const { activityId } = req.params;
+      const userId = req.user.claims.sub;
+      const { reactionType } = req.body;
+
+      const reaction = await storage.addActivityReaction({
+        userId,
+        activityId,
+        reactionType,
+        createdAt: new Date(),
+      });
+
+      res.json(reaction);
+    } catch (error) {
+      console.error("Error adding activity reaction:", error);
+      res.status(500).json({ message: "Failed to add reaction" });
+    }
+  });
+
+  app.delete('/api/admin/activities/:activityId/reactions/:reactionType', isAuthenticated, async (req: any, res) => {
+    try {
+      const { activityId, reactionType } = req.params;
+      const userId = req.user.claims.sub;
+
+      await storage.removeActivityReaction(userId, activityId, undefined, reactionType);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing activity reaction:", error);
+      res.status(500).json({ message: "Failed to remove reaction" });
+    }
+  });
+
+  app.get('/api/admin/activities/:activityId/reactions', async (req, res) => {
+    try {
+      const { activityId } = req.params;
+      const reactions = await storage.getActivityReactions(activityId);
+      res.json(reactions);
+    } catch (error) {
+      console.error("Error fetching activity reactions:", error);
+      res.status(500).json({ message: "Failed to fetch reactions" });
+    }
+  });
+
+  app.post('/api/activity-comments/:commentId/reactions', isAuthenticated, async (req: any, res) => {
+    try {
+      const { commentId } = req.params;
+      const userId = req.user.claims.sub;
+      const { reactionType } = req.body;
+
+      const reaction = await storage.addActivityReaction({
+        userId,
+        commentId,
+        reactionType,
+        createdAt: new Date(),
+      });
+
+      res.json(reaction);
+    } catch (error) {
+      console.error("Error adding comment reaction:", error);
+      res.status(500).json({ message: "Failed to add reaction" });
+    }
+  });
+
+  app.delete('/api/activity-comments/:commentId/reactions/:reactionType', isAuthenticated, async (req: any, res) => {
+    try {
+      const { commentId, reactionType } = req.params;
+      const userId = req.user.claims.sub;
+
+      await storage.removeActivityReaction(userId, undefined, commentId, reactionType);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing comment reaction:", error);
+      res.status(500).json({ message: "Failed to remove reaction" });
+    }
+  });
+
+  app.get('/api/activity-comments/:commentId/reactions', async (req, res) => {
+    try {
+      const { commentId } = req.params;
+      const reactions = await storage.getCommentReactions(commentId);
+      res.json(reactions);
+    } catch (error) {
+      console.error("Error fetching comment reactions:", error);
+      res.status(500).json({ message: "Failed to fetch reactions" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket service

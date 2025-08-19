@@ -203,6 +203,43 @@ export const introductions = pgTable("introductions", {
   respondedAt: timestamp("responded_at"),
 });
 
+// Admin Activities - rich text posts by admins
+export const adminActivities = pgTable("admin_activities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adminId: varchar("admin_id").references(() => users.id).notNull(),
+  type: varchar("type").notNull(), // 'poll', 'question', 'announcement', 'life_incident'
+  title: text("title").notNull(),
+  content: text("content").notNull(), // Rich text HTML content
+  metadata: text("metadata"), // JSON string for poll options, etc.
+  isActive: boolean("is_active").default(true).notNull(),
+  commentCount: integer("comment_count").default(0),
+  reactionCount: integer("reaction_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Activity Comments - user responses to admin activities
+export const activityComments = pgTable("activity_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  activityId: varchar("activity_id").references(() => adminActivities.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  parentId: varchar("parent_id").references(() => activityComments.id, { onDelete: "cascade" }),
+  reactionCount: integer("reaction_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Activity Reactions - emoji reactions to comments and activities
+export const activityReactions = pgTable("activity_reactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  activityId: varchar("activity_id").references(() => adminActivities.id, { onDelete: "cascade" }),
+  commentId: varchar("comment_id").references(() => activityComments.id, { onDelete: "cascade" }),
+  reactionType: varchar("reaction_type").notNull(), // 'like', 'love', 'support', 'insightful', 'celebrate', 'funny', 'disagree'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Likes on responses
 export const likes = pgTable("likes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -220,6 +257,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   sentIntroductions: many(introductions, { relationName: "requester" }),
   receivedIntroductions: many(introductions, { relationName: "target" }),
   likes: many(likes),
+  adminActivities: many(adminActivities),
+  activityComments: many(activityComments),
+  activityReactions: many(activityReactions),
 }));
 
 export const promptsRelations = relations(prompts, ({ many }) => ({
@@ -299,6 +339,48 @@ export const likesRelations = relations(likes, ({ one }) => ({
   }),
 }));
 
+export const adminActivitiesRelations = relations(adminActivities, ({ one, many }) => ({
+  admin: one(users, {
+    fields: [adminActivities.adminId],
+    references: [users.id],
+  }),
+  comments: many(activityComments),
+  reactions: many(activityReactions),
+}));
+
+export const activityCommentsRelations = relations(activityComments, ({ one, many }) => ({
+  activity: one(adminActivities, {
+    fields: [activityComments.activityId],
+    references: [adminActivities.id],
+  }),
+  user: one(users, {
+    fields: [activityComments.userId],
+    references: [users.id],
+  }),
+  parent: one(activityComments, {
+    fields: [activityComments.parentId],
+    references: [activityComments.id],
+    relationName: "parent",
+  }),
+  replies: many(activityComments, { relationName: "parent" }),
+  reactions: many(activityReactions),
+}));
+
+export const activityReactionsRelations = relations(activityReactions, ({ one }) => ({
+  user: one(users, {
+    fields: [activityReactions.userId],
+    references: [users.id],
+  }),
+  activity: one(adminActivities, {
+    fields: [activityReactions.activityId],
+    references: [adminActivities.id],
+  }),
+  comment: one(activityComments, {
+    fields: [activityReactions.commentId],
+    references: [activityComments.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users);
 export const insertPromptSchema = createInsertSchema(prompts);
@@ -306,10 +388,19 @@ export const insertResponseSchema = createInsertSchema(responses);
 export const insertCommentSchema = createInsertSchema(comments);
 export const insertGroupSchema = createInsertSchema(groups);
 export const insertIntroductionSchema = createInsertSchema(introductions);
+export const insertAdminActivitySchema = createInsertSchema(adminActivities);
+export const insertActivityCommentSchema = createInsertSchema(activityComments);
+export const insertActivityReactionSchema = createInsertSchema(activityReactions);
 
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type AdminActivity = typeof adminActivities.$inferSelect;
+export type ActivityComment = typeof activityComments.$inferSelect;
+export type ActivityReaction = typeof activityReactions.$inferSelect;
+export type UpsertAdminActivity = typeof adminActivities.$inferInsert;
+export type UpsertActivityComment = typeof activityComments.$inferInsert;
+export type UpsertActivityReaction = typeof activityReactions.$inferInsert;
 
 // Onboarding step schemas
 export const signupSchema = createInsertSchema(users).pick({

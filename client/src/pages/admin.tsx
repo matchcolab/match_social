@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import ActivityComposer from "@/components/admin/activity-composer";
+import ActivityFeed from "@/components/admin/activity-feed";
 import { 
   Settings, 
   Users, 
@@ -20,7 +22,8 @@ import {
   Plus,
   Eye,
   Edit,
-  Crown
+  Crown,
+  Megaphone
 } from "lucide-react";
 
 export default function Admin() {
@@ -65,14 +68,34 @@ export default function Admin() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="activities">Activities</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="prompts">Prompts</TabsTrigger>
-            <TabsTrigger value="groups">Groups</TabsTrigger>
             <TabsTrigger value="moderation">Moderation</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             <OverviewTab />
+          </TabsContent>
+
+          <TabsContent value="activities" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Megaphone className="w-5 h-5 mr-2" />
+                  Community Activities
+                </CardTitle>
+                <CardDescription>
+                  Create and manage community posts, polls, and discussions
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="p-6 border-b">
+                  <ActivityComposer />
+                </div>
+                <ActivityFeed />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
@@ -81,10 +104,6 @@ export default function Admin() {
 
           <TabsContent value="prompts" className="space-y-6">
             <PromptsTab />
-          </TabsContent>
-
-          <TabsContent value="groups" className="space-y-6">
-            <GroupsTab />
           </TabsContent>
 
           <TabsContent value="moderation" className="space-y-6">

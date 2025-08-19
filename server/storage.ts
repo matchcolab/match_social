@@ -7,6 +7,9 @@ import {
   groupMemberships,
   introductions,
   likes,
+  adminActivities,
+  activityComments,
+  activityReactions,
   type User,
   type UpsertUser,
   type Prompt,
@@ -20,6 +23,12 @@ import {
   type GroupMembership,
   type Introduction,
   type InsertIntroduction,
+  type AdminActivity,
+  type UpsertAdminActivity,
+  type ActivityComment,
+  type UpsertActivityComment,
+  type ActivityReaction,
+  type UpsertActivityReaction,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
@@ -78,6 +87,24 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   createGroup(group: InsertGroup): Promise<Group>;
   getModerationQueue(): Promise<any[]>;
+
+  // Admin Activities
+  createAdminActivity(activity: UpsertAdminActivity): Promise<AdminActivity>;
+  getAdminActivities(): Promise<any[]>;
+  getAdminActivity(id: string): Promise<AdminActivity | undefined>;
+  updateAdminActivity(id: string, updates: any): Promise<AdminActivity>;
+  deleteAdminActivity(id: string): Promise<void>;
+
+  // Activity Comments
+  createActivityComment(comment: UpsertActivityComment): Promise<ActivityComment>;
+  getActivityComments(activityId: string): Promise<any[]>;
+  updateCommentCounts(activityId: string): Promise<void>;
+
+  // Activity Reactions
+  addActivityReaction(reaction: UpsertActivityReaction): Promise<ActivityReaction>;
+  removeActivityReaction(userId: string, activityId?: string, commentId?: string, reactionType?: string): Promise<void>;
+  getActivityReactions(activityId: string): Promise<any[]>;
+  getCommentReactions(commentId: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -474,6 +501,210 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(responses.createdAt));
     
     return reports;
+  }
+
+  // Admin Activities
+  async createAdminActivity(activity: UpsertAdminActivity): Promise<AdminActivity> {
+    const [newActivity] = await db
+      .insert(adminActivities)
+      .values(activity)
+      .returning();
+    return newActivity;
+  }
+
+  async getAdminActivities(): Promise<any[]> {
+    const activities = await db
+      .select({
+        id: adminActivities.id,
+        type: adminActivities.type,
+        title: adminActivities.title,
+        content: adminActivities.content,
+        metadata: adminActivities.metadata,
+        isActive: adminActivities.isActive,
+        commentCount: adminActivities.commentCount,
+        reactionCount: adminActivities.reactionCount,
+        createdAt: adminActivities.createdAt,
+        updatedAt: adminActivities.updatedAt,
+        admin: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          role: users.role,
+        }
+      })
+      .from(adminActivities)
+      .innerJoin(users, eq(adminActivities.adminId, users.id))
+      .where(eq(adminActivities.isActive, true))
+      .orderBy(desc(adminActivities.createdAt));
+
+    return activities.map(activity => ({
+      ...activity,
+      _count: {
+        comments: activity.commentCount || 0,
+        reactions: activity.reactionCount || 0,
+      }
+    }));
+  }
+
+  async getAdminActivity(id: string): Promise<AdminActivity | undefined> {
+    const [activity] = await db
+      .select()
+      .from(adminActivities)
+      .where(eq(adminActivities.id, id));
+    return activity;
+  }
+
+  async updateAdminActivity(id: string, updates: any): Promise<AdminActivity> {
+    const [activity] = await db
+      .update(adminActivities)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(adminActivities.id, id))
+      .returning();
+    return activity;
+  }
+
+  async deleteAdminActivity(id: string): Promise<void> {
+    await db
+      .update(adminActivities)
+      .set({ isActive: false })
+      .where(eq(adminActivities.id, id));
+  }
+
+  // Activity Comments
+  async createActivityComment(comment: UpsertActivityComment): Promise<ActivityComment> {
+    const [newComment] = await db
+      .insert(activityComments)
+      .values(comment)
+      .returning();
+    return newComment;
+  }
+
+  async getActivityComments(activityId: string): Promise<any[]> {
+    const comments = await db
+      .select({
+        id: activityComments.id,
+        content: activityComments.content,
+        parentId: activityComments.parentId,
+        reactionCount: activityComments.reactionCount,
+        createdAt: activityComments.createdAt,
+        updatedAt: activityComments.updatedAt,
+        user: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+          appId: users.appId,
+        }
+      })
+      .from(activityComments)
+      .innerJoin(users, eq(activityComments.userId, users.id))
+      .where(eq(activityComments.activityId, activityId))
+      .orderBy(activityComments.createdAt);
+
+    // Group comments with their replies
+    const commentMap = new Map();
+    const topLevelComments: any[] = [];
+
+    comments.forEach(comment => {
+      comment._count = { 
+        reactions: comment.reactionCount || 0,
+        replies: 0 
+      };
+      commentMap.set(comment.id, comment);
+      
+      if (!comment.parentId) {
+        comment.replies = [];
+        topLevelComments.push(comment);
+      }
+    });
+
+    comments.forEach(comment => {
+      if (comment.parentId) {
+        const parent = commentMap.get(comment.parentId);
+        if (parent) {
+          if (!parent.replies) parent.replies = [];
+          parent.replies.push(comment);
+          parent._count.replies++;
+        }
+      }
+    });
+
+    return topLevelComments;
+  }
+
+  async updateCommentCounts(activityId: string): Promise<void> {
+    const [{ count: commentCount }] = await db
+      .select({ count: count() })
+      .from(activityComments)
+      .where(eq(activityComments.activityId, activityId));
+
+    await db
+      .update(adminActivities)
+      .set({ commentCount: Number(commentCount) })
+      .where(eq(adminActivities.id, activityId));
+  }
+
+  // Activity Reactions
+  async addActivityReaction(reaction: UpsertActivityReaction): Promise<ActivityReaction> {
+    const [newReaction] = await db
+      .insert(activityReactions)
+      .values(reaction)
+      .onConflictDoNothing()
+      .returning();
+    return newReaction;
+  }
+
+  async removeActivityReaction(userId: string, activityId?: string, commentId?: string, reactionType?: string): Promise<void> {
+    const conditions = [eq(activityReactions.userId, userId)];
+    
+    if (activityId) {
+      conditions.push(eq(activityReactions.activityId, activityId));
+    }
+    if (commentId) {
+      conditions.push(eq(activityReactions.commentId, commentId));
+    }
+    if (reactionType) {
+      conditions.push(eq(activityReactions.reactionType, reactionType));
+    }
+
+    await db
+      .delete(activityReactions)
+      .where(and(...conditions));
+  }
+
+  async getActivityReactions(activityId: string): Promise<any[]> {
+    const reactions = await db
+      .select({
+        type: activityReactions.reactionType,
+        count: count(),
+        hasUserReacted: sql<boolean>`false`,
+      })
+      .from(activityReactions)
+      .where(eq(activityReactions.activityId, activityId))
+      .groupBy(activityReactions.reactionType);
+
+    return reactions.map(r => ({
+      type: r.type,
+      count: Number(r.count),
+      hasUserReacted: false, // Would need userId to determine this
+    }));
+  }
+
+  async getCommentReactions(commentId: string): Promise<any[]> {
+    const reactions = await db
+      .select({
+        type: activityReactions.reactionType,
+        count: count(),
+        hasUserReacted: sql<boolean>`false`,
+      })
+      .from(activityReactions)
+      .where(eq(activityReactions.commentId, commentId))
+      .groupBy(activityReactions.reactionType);
+
+    return reactions.map(r => ({
+      type: r.type,
+      count: Number(r.count),
+      hasUserReacted: false, // Would need userId to determine this
+    }));
   }
 }
 
