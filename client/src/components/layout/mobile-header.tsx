@@ -14,6 +14,7 @@ import {
   Settings,
   Crown
 } from "lucide-react";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 interface MobileHeaderProps {
   onlineCount: number;
@@ -142,6 +143,9 @@ export default function MobileHeader({ onlineCount, user }: MobileHeaderProps) {
             <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
             <span>{onlineCount} online</span>
           </div>
+          
+          {/* Theme Switcher */}
+          <ThemeSwitcher />
           
           {/* Notifications */}
           <Button variant="ghost" size="sm" className="relative p-2">

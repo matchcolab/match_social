@@ -11,6 +11,7 @@ import {
   Crown
 } from "lucide-react";
 import type { User } from "@shared/schema";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 interface SidebarProps {
   user: User;
@@ -108,11 +109,14 @@ export default function Sidebar({ user, onlineCount }: SidebarProps) {
                 {user.title && user.age ? `${user.title}, ${user.age}` : user.title || `Age ${user.age}` || 'Member'}
               </p>
             </div>
-            <Link href="/profile">
-              <Button variant="ghost" size="sm" className="p-1">
-                <Settings className="h-4 w-4 text-secondary" />
-              </Button>
-            </Link>
+            <div className="flex items-center space-x-1">
+              <ThemeSwitcher />
+              <Link href="/profile">
+                <Button variant="ghost" size="sm" className="p-1">
+                  <Settings className="h-4 w-4 text-secondary" />
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
